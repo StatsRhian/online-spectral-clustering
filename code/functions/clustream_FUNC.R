@@ -15,12 +15,11 @@ mStar <- 0 # Index of closest microCluster to new data point x
     if (tempDist < minDist) {minDist <- tempDist; mStar <- m}
   }
   
-  if(micro$n[mStar] == 1 ){stdX <- rep(1, length = nDim)}
-  stdX <- sqrt((micro$CF2x[mStar,]/micro$n[mStar]) - (micro$CF1x[mStar,]/micro$n[mStar])^2)
-  
-  
-  if(sum(abs(x - micro$CF1x[mStar,]/micro$n[mStar]) < stdX*2) == nDim){
-    #if (minDist < maxBound*2.75){
+  factor = 2
+  MBF <- sqrt((micro$CF2x[mStar,]/micro$n[mStar]) - (micro$CF1x[mStar,]/micro$n[mStar])^2)*factor
+  if(micro$n[mStar] == 1 ){MBF <- rep(1, length = nDim)}
+
+    if(sum(abs(x - micro$CF1x[mStar,]/micro$n[mStar]) < MBF) == nDim){
     
     # Update X into m 
     for (j in 1:nDim) {   
