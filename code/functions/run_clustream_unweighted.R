@@ -2,16 +2,17 @@ run_clustream_unweighted <- function(dataset, nMicro){
 
 source("code/global_settings.R")
 
-data <- read.csv(sprintf("data/sim_data/train/%s.csv",dataset), header = FALSE)
-trueClusters <- data[,ncol(data)]
-data <- data[ ,-ncol(data)]
-nClust <- length(unique(trueClusters))
-nDim <- ncol(data)
-N <- nrow(data)
+nDim = 2
+nClust = 2
 
-test <- read.csv(sprintf("data/sim_data/test/%s.csv",dataset), header = FALSE)
-test_trueClusters <- test[,ncol(test)]
-test <- test[ ,-ncol(test)]
+N <- 1000
+pi_vec <- c(0.5,0.5)
+mu_mat <- matrix(c(0,0,5,5), nrow = 2, ncol = 2, byrow = T)
+sigma_list <- list(diag(2), diag(2))
+
+data_complete <- simulateMMN_fixed(N, pi_vec, mu_mat, sigma_list)  
+data <- data_complete[[1]]
+trueClusters <- data_complete[[2]]
 
 runs <- N - sizeInit
 
@@ -34,19 +35,14 @@ for(t in (sizeInit+1):(sizeInit+runs)){
   if (t%%batchSize == 0){
     centers <- sweep(micro$CF1x, 1, micro$n, FUN = "/")
     sp <- spectralClustering_unweighted(centers, nClust, 8)
-    macro_centers = NULL
-    for (c in 1:nClust){
-      macro_centers <- rbind(macro_centers, colSums(matrix(centers[which(sp==c),],ncol = nDim))/sum(sp==c))
-    }
-    sim_matrix <- matrix(NA, nrow = t, ncol = nClust)
-    for (i in 1:t){
-      for (c in 1:nClust){
-        sim_matrix[i,c] <- similarity_new_data(test[i,],macro_centers[c,])
-      }
-    }
     
-    assignment <- apply(sim_matrix, 1, which.max)
-    performance[(t-sizeInit)/batchSize,] <- calc_vmeasure_purity_numClust(assigned = assignment, labels = test_trueClusters[1:t])
+    sim_complete <- simulateMMN_fixed(N, pi_vec, mu_mat, sigma_list)  
+    sim_data <- sim_complete[[1]]
+    sim_trueClusters <- sim_complete[[2]]
+   
+    linked_sim <- as.numeric(apply(sim_data, 1, FIND_closest_microcluster, centers))
+    assignment <- sp[linked_sim]
+    performance[(t-sizeInit)/batchSize,] <- calc_vmeasure_purity_numClust(assigned = assignment, labels = sim_trueClusters)
     }
 }
 
