@@ -1,5 +1,11 @@
 #Similarity and affinity functions
 
+CALC_euclidean_row <- function(datarow, point){return(as.numeric(dist(rbind(point, datarow))))}
+
+FIND_closest_microcluster <- function(x, data){
+  which.min(apply(data, 1, CALC_euclidean_row, x))
+}
+
 create_gaussian_affinity <- function(X, nn){
   ds <- as.matrix(dist(X))
   s <- unlist(apply(ds, 1, function(x) sort(x)[nn]))
