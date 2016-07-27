@@ -1,5 +1,5 @@
 #Investigate number of elements in the microclusters over time
-
+rm(list = ls())
 invisible(sapply(X = list.files(path = "code/functions", pattern = "*.R$", full.names = TRUE, ignore.case = TRUE), source, .GlobalEnv))
 dataset <- "norm_original"#"norm_8clusters_3dim"
 nMicro <- 150
