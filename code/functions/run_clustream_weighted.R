@@ -1,18 +1,10 @@
-run_clustream_weighted <- function(dataset, nMicro){
+run_clustream_weighted <- function(dataset, nMicro, nRepeats = 1){
   
 source("code/global_settings.R")
 
-data <- read.csv(sprintf("data/sim_data/train/%s.csv",dataset), header = FALSE)
-trueClusters <- data[,ncol(data)]
-data <- data[ ,-ncol(data)]
-nClust <- length(unique(trueClusters))
-nDim <- ncol(data)
-N <- nrow(data)
-  
-test <- read.csv(sprintf("data/sim_data/test/%s.csv",dataset), header = FALSE)
-test_trueClusters <- test[,ncol(test)]
-test <- test[ ,-ncol(test)]
-
+for (currentRepeat in 1:nRepeats){  
+#Generate train data
+source("code/generate_simulated_train.R")
 runs <- N - sizeInit
 
 assignment <- vector(length = (sizeInit + runs))
@@ -34,19 +26,14 @@ for(t in (sizeInit+1):(sizeInit+runs)){
   if (t%%batchSize == 0){
     centers <- sweep(micro$CF1x, 1, micro$n, FUN = "/")
     sp <- spectralClustering_weighted(centers, nClust, 8, clustSize = micro$n)
-    macro_centers = NULL
-    for (c in 1:nClust){
-      macro_centers <- rbind(macro_centers, colSums(matrix(centers[which(sp==c),],ncol = nDim))/sum(sp==c))
-    }
-    sim_matrix <- matrix(NA, nrow = t, ncol = nClust)
-    for (i in 1:t){
-      for (c in 1:nClust){
-        sim_matrix[i,c] <- similarity_new_data(test[i,],macro_centers[c,])
-      }
-    }
     
-    assignment <- apply(sim_matrix, 1, which.max)
-    performance[(t-sizeInit)/batchSize,] <- calc_vmeasure_purity_numClust(assigned = assignment, labels = test_trueClusters[1:t])
+    #Generate test data
+    source("code/generate_simulated_test.R")
+    
+    linked_test <- as.numeric(apply(test_data, 1, FIND_closest_microcluster, centers))
+    assignment <- sp[linked_test]
+    performance[(t-sizeInit)/batchSize,] <- calc_vmeasure_purity_numClust(assigned = assignment, labels = test_trueClusters)
+
   }
 }
 
@@ -55,6 +42,7 @@ results <- data.frame(purity = performance[,1],
                       batch_number = 1:nrow(performance),
                       stringsAsFactors = FALSE) 
 
-file_name <- sprintf("clustream_weighted_%s", dataset)
+file_name <- sprintf("clustream_weighted_%s_%i_of_%i", dataset, currentRepeat, nRepeats)
 write.table(results, file = sprintf("results/%s.csv",file_name), sep = ",", row.names = FALSE)
+}
 }

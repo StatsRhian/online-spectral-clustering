@@ -1,6 +1,7 @@
 #################################
 #Generate test simulations
 #################################
+num_test_points = 200
 
 ######### Dataset one #########
 # Static Multivariate Normal

@@ -1,9 +1,8 @@
-run_clustream_unweighted <- function(dataset, nMicro){
+run_clustream_unweighted <- function(dataset, nMicro, nRepeats = 1){
 
-  
 source("code/global_settings.R")
 
-  
+for (currentRepeat in 1:nRepeats){  
 #Generate train data
 source("code/generate_simulated_train.R")
 runs <- N - sizeInit
@@ -28,7 +27,6 @@ for(t in (sizeInit+1):(sizeInit+runs)){
     centers <- sweep(micro$CF1x, 1, micro$n, FUN = "/")
     sp <- spectralClustering_unweighted(centers, nClust, 8)
     
-    num_test_points = 200
     #Generate test data
     source("code/generate_simulated_test.R")
     
@@ -43,6 +41,7 @@ results <- data.frame(purity = performance[ ,1],
                       batch_number = 1:nrow(performance),
                       stringsAsFactors = FALSE) 
 
-file_name <- sprintf("clustream_unweighted_%s", dataset)
+file_name <- sprintf("clustream_unweighted_%s_%i_of_%i", dataset, currentRepeat, nRepeats)
 write.table(results, file = sprintf("results/%s.csv",file_name), sep = ",", row.names = FALSE)
+}
 }
