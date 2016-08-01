@@ -1,0 +1,65 @@
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="generator" content="R package animation 2.4.1">
+	<title>Hypersphere dataset with microclusters</title>
+	<link rel="stylesheet" href="css/reset.css" />
+	<link rel="stylesheet" href="css/styles.css" />
+	<link rel="stylesheet" href="css/scianimator.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.3/styles/github.min.css">
+
+	<script src="js/jquery-1.4.4.min.js"></script>
+	<script src="js/jquery.scianimator.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.3/highlight.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.3/languages/r.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+
+</head>
+<body>
+
+	<div class="scianimator"><div id="hypersphere_micro" style="display: inline-block;"></div></div>
+	<div class="scianimator" style="width: 480px; text-align: left"><pre><code class="r">## Animations generated in R version 3.2.2 (2015-08-14)
+##   using the package animation
+library(animation)
+library(rARPACK)
+library(mvnfast)
+for (t in (sizeInit + 1):(sizeInit + runs)) {
+    print(t)
+    clusTime <- clusTime + 1
+    output <- do_clustream(data[t, ], micro, assignment, 
+        nDim, nMicro, clusTime, t)
+    micro <- output[[1]]
+    assignment <- output[[2]]
+    if (t%%batchSize == 0) {
+        centers <- sweep(micro$CF1x, 1, micro$n, FUN = "/")
+        sp <- spectralClustering_unweighted(centers, nClust, 
+            8)
+        num_test_points = 200
+        test_data = matrix(NA, num_test_points, nDim)
+        test_trueClusters = sample(c(1, 2), num_test_points, 
+            prob = c(ProbClassOne, 1 - ProbClassOne), replace = T)
+        test_data[test_trueClusters == 1] <- rmvn(sum(test_trueClusters == 
+            1), modelCentres$centres1[t, ], covar)
+        test_data[test_trueClusters == 2] <- rmvn(sum(test_trueClusters == 
+            2), modelCentres$centres2[t, ], covar)
+        plot(test_data, col = test_trueClusters, xlim = c(-1.5, 
+            1.5), ylim = c(-1.5, 1.5))
+        points(centers, col = sp + 2, pch = 3, lwd = 3)
+        ani.pause()
+        linked_test <- as.numeric(apply(test_data, 1, FIND_closest_microcluster, 
+            centers))
+        assignment <- sp[linked_test]
+        performance[(t - sizeInit)/batchSize, ] <- calc_vmeasure_purity_numClust(assigned = assignment, 
+            labels = test_trueClusters)
+    }
+}
+results <- data.frame(purity = performance[, 1], vmeasure = performance[, 
+    2], batch_number = 1:nrow(performance), stringsAsFactors = FALSE)
+## R version 3.2.2 (2015-08-14)
+## Platform: x86_64-w64-mingw32/x64 (64-bit)
+## Other packages: animation 2.4.1, rARPACK 0.7-0, mvnfast 0.1.4</code></pre></div>
+	<script src="js/hypersphere_micro.js"></script>
+<!-- highlight R code -->
+
+</body>
+</html>
