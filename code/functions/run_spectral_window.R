@@ -21,7 +21,7 @@ performance <- array(NA, dim = c(floor(runs/batchSize),3))
       sp <- spectralClustering_unweighted(window, nClust, 8)
       
       #Generate test data
-      source("code/generate_simulated_test.R")
+      source("code/generate_simulated_test.R", local = T)
       
       linked_test <- as.numeric(apply(test_data, 1, FIND_closest_microcluster, window))
       assignment <- sp[linked_test]

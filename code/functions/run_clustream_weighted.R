@@ -28,7 +28,7 @@ for(t in (sizeInit+1):(sizeInit+runs)){
     sp <- spectralClustering_weighted(centers, nClust, 8, clustSize = micro$n)
     
     #Generate test data
-    source("code/generate_simulated_test.R")
+    source("code/generate_simulated_test.R", local = T)
     
     linked_test <- as.numeric(apply(test_data, 1, FIND_closest_microcluster, centers))
     assignment <- sp[linked_test]
