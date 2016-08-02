@@ -3,7 +3,7 @@
 #PBS -M email       # change this or remove if you dont want emails
 
 #PBS -l ncpus=1             # resource requests. See http://qcd.phys.cmu.edu/QCDcluster/pbs/run_serial.html for more options and a good explaination
-#PBS -t 1-2%2               # m-n%c   submit the job array indexed from (m) to (n) (inclusive) but only allow c jobs to be running (c)oncurrently.
+#PBS -t 1-2%1               # m-n%c   submit the job array indexed from (m) to (n) (inclusive) but only allow c jobs to be running (c)oncurrently.
 #PBS -m ae                   # email if the job: (a)borts, (b)egins, (e)nds. can be used in combinations. Delete this lone for no emails
 
 #PBS -o outerr/
