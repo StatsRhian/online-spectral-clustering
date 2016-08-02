@@ -5,7 +5,7 @@ run_spectral_window <- function(dataset, windowSize, nRepeats = 1){
 for (currentRepeat in 1:nRepeats){  
 #Generate train data
 source("code/generate_simulated_train.R")
-runs <- 50#N - sizeInit
+runs <- N - sizeInit
   
 assignment <- vector(length = (sizeInit + runs))
 performance <- array(NA, dim = c(floor(runs/batchSize),3))
