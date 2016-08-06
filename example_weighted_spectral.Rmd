@@ -1,0 +1,139 @@
+---
+title: "Weighted and non-weighted Spectral Clustering"
+author: "Rhian Davies"
+date: "6 August 2016"
+output: html_document
+---
+
+Observing affinity matricies for weighted and unweighted spectral clustering.
+
+```{r, echo=FALSE, message= F, warning=F}
+#Testing weighted and unweighted
+
+
+#install.packages(
+#  'printr',
+#  type = 'source',
+#  repos = c('http://yihui.name/xran', 'http://cran.rstudio.com')
+#)
+
+rm(list = ls())
+library(printr)
+invisible(sapply(X = list.files(path = "code/functions", pattern = "*.R$", full.names = TRUE, ignore.case = TRUE), source, .GlobalEnv))
+
+set.seed(200)
+
+nDim = 2
+nClust = 2
+N <- 5
+pi_vec <- c(0.2,0.8)
+mu_mat <- matrix(c(1,1,2.5,2.5), nrow = 2, ncol = 2, byrow = T)
+sigma_list <- list(diag(2)*0.05, diag(2)*0.05)
+data_complete <- simulateMMN_fixed(N, pi_vec, mu_mat, sigma_list)  
+data <- data_complete[[1]]
+trueClusters <- data_complete[[2]]
+
+plot(data, col = trueClusters, xlim = c(0,4), ylim = c(0,4))
+
+```
+
+We apply k-means to create two microclusters
+
+```{r, echo=FALSE}
+micro <- kmeans(data, centers = 2, nstart = 20)
+plot(data, xlim = c(0,4), ylim = c(0,4))
+points(micro$centers, col = 3, pch = 3, lwd =3)
+```
+
+The centers of the microclusters are `r round(micro$centers[1,],1)` and `r round(micro$centers[2,],1)` . 
+Therefore a simple affinity matrix can be created for those two points. 
+
+```{r, echo=FALSE}
+A1 <- matrix(1, nrow = 2, ncol =2)
+A1[1,2] <- A1[2,1] <- similarity(micro$centers[1,], micro$centers[2,])
+```
+
+The affinity matrix is given below.
+
+
+$$\mathbf{A} = \left[\begin{array}
+{rrr}
+`r A1[1,1]` & `r A1[1,2]` \\
+`r A1[2,1]` & `r A1[2,2]`
+\end{array}\right]
+$$
+
+We then calculate the diagonal and the Laplacian matricies
+```{r, echo=FALSE}
+D1 <- diag(rowSums(A1))
+L1 <- D1 - A1
+```
+
+$$\mathbf{D} = \left[\begin{array}
+{rrr}
+`r D1[1,1]` & `r D1[1,2]` \\
+`r D1[2,1]` & `r D1[2,2]`
+\end{array}\right]
+$$
+
+
+$$\mathbf{L} = \left[\begin{array}
+{rrr}
+`r L1[1,1]` & `r L1[1,2]` \\
+`r L1[2,1]` & `r L1[2,2]`
+\end{array}\right]
+$$
+
+
+### Weighting the affinity matrix
+There are `r micro$size[1]` points assigned to cluster 1 and `r micro$size[2]` points assigned to cluster 2. We can weight the affinity matrix by the number of elements in each cluster.
+
+```{r, echo=FALSE}
+A2 <- A1
+A2[1,2] <- A2[2,1] <- A1[1,2]*micro$size[1]*micro$size[2]
+A2[1,1] <- A2[1,1]*(micro$size[1])^2
+A2[2,2] <- A2[2,2]*(micro$size[2])^2
+```
+
+Note that we no longer have ones on the diagonal although the matrix is still positive semi definite and symmetric. (And will always be when we multiply by a positive number)
+
+$$\mathbf{A} = \left[\begin{array}
+{rrr}
+`r A2[1,1]` & `r A2[1,2]` \\
+`r A2[2,1]` & `r A2[2,2]`
+\end{array}\right]
+$$
+
+We then calculate the diagonal and the Laplacian matricies
+```{r, echo=FALSE}
+D2 <- diag(rowSums(A2))
+L2 <- D2 - A2
+```
+
+$$\mathbf{D} = \left[\begin{array}
+{rrr}
+`r D2[1,1]` & `r D2[1,2]` \\
+`r D2[2,1]` & `r D2[2,2]`
+\end{array}\right]
+$$
+
+
+$$\mathbf{L} = \left[\begin{array}
+{rrr}
+`r L2[1,1]` & `r L2[1,2]`  \\
+`r L2[2,1]` & `r L2[2,2]`
+\end{array}\right]
+$$
+
+Weighting the microclusters in this manner is the same as treating creating an affinity matrix with each microcluster center repeated as many times as there are points. 
+
+For example in this very simple case the Affinity matrix would be...
+
+```{r, echo=FALSE}
+A3 <- similarity_all(data)
+D3 <- diag(rowSums(A3))
+L3 <- D3 - A3
+
+as.table(A3)
+```
+
