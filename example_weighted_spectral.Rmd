@@ -130,10 +130,25 @@ Weighting the microclusters in this manner is the same as treating creating an a
 For example in this very simple case the Affinity matrix would be...
 
 ```{r, echo=FALSE}
-A3 <- similarity_all(data)
+sim <- similarity(micro$centers[1,], micro$centers[2,])
+n1 <- (micro$size[1])
+n2 <- (micro$size[2])
+n <- n1+n2
+A3 <- matrix(0, n,n)
+A3[1:n1, 1:n1] <- 1
+A3[1:n1, (n1+1):n] <- sim
+A3[(n1+1):n, 1:n1] <- sim
+A3[(n1+1):n, (n1+1):n] <- 1
+
+
 D3 <- diag(rowSums(A3))
 L3 <- D3 - A3
 
 as.table(A3)
+
+
+e2 <- eigen(L2, symmetric = T)
+e3 <- eigen(L3, symmetric = T)
+
 ```
 
